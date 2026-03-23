@@ -35,7 +35,6 @@
 
         .bar {
             height: 12px;
-            background: #38bdf8;
             margin-bottom: 15px;
             border-radius: 10px;
         }
@@ -61,7 +60,7 @@
 <body>
 
 <div class="container">
-    <h2 class="text-center mb-4">🧠 EEG Sleep Level Predictor</h2>
+    <h2 class="text-center mb-4">🧠 EEG AI Predictor</h2>
 
     <div class="card">
 
@@ -83,17 +82,47 @@
 
 <script>
 
+/* =========================
+   CLASS LABEL MAPPING
+========================= */
+const labelMap = {
+    1: "Eyes Open",
+    2: "Eyes Closed",
+    3: "Non-Epileptic Zone",
+    4: "Epileptic Zone",
+    5: "Seizure"
+};
+
+/* =========================
+   COLOR MAPPING
+========================= */
+function getColor(cls) {
+    switch (cls) {
+        case 1: return "#22c55e"; // green
+        case 2: return "#38bdf8"; // blue
+        case 3: return "#facc15"; // yellow
+        case 4: return "#f97316"; // orange
+        case 5: return "#ef4444"; // red
+        default: return "#94a3b8";
+    }
+}
+
+/* =========================
+   GENERATE SAMPLE EEG
+========================= */
 function generateSample() {
     let sample = [];
 
     for (let i = 0; i < 4094; i++) {
-        // more random + realistic variation
         sample.push((Math.random() * 2 - 1) * (Math.sin(i / 30) + Math.random()));
     }
 
     document.getElementById("signal").value = sample.join(" ");
 }
 
+/* =========================
+   PREDICT FUNCTION
+========================= */
 function predict() {
     let signalInput = document.getElementById("signal").value.trim();
 
@@ -102,7 +131,7 @@ function predict() {
         return;
     }
 
-    // 🔥 SAFE PARSING (fixes ALL your previous errors)
+    // convert input → number array
     let signal = signalInput
         .split(/[\s,]+/)
         .map(Number)
@@ -135,8 +164,12 @@ function predict() {
 
         let html = `
             <h4 class="prediction-label">
-                Prediction: <span class="text-warning">${data.prediction}</span>
+                Prediction:
+                <span class="text-warning">
+                    ${labelMap[data.prediction] || "Unknown"}
+                </span>
             </h4>
+
             <h5 class="confidence-label">Confidence Breakdown:</h5>
         `;
 
@@ -146,10 +179,16 @@ function predict() {
             html += `
                 <div class="mb-1">
                     <div class="d-flex justify-content-between">
-                        <span class="class-text">Class ${p.class}</span>
+                        <span class="class-text">
+                            ${labelMap[p.class] || ("Class " + p.class)}
+                        </span>
                         <span class="percent-text">${percent}%</span>
                     </div>
-                    <div class="bar" style="width:${percent}%"></div>
+
+                    <div class="bar" style="
+                        width:${percent}%;
+                        background:${getColor(p.class)};
+                    "></div>
                 </div>
             `;
         });
@@ -162,6 +201,9 @@ function predict() {
     });
 }
 
+/* =========================
+   CSRF TOKEN
+========================= */
 function getCSRFToken() {
     let cookieValue = null;
 
