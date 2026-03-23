@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EEG Prediction System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+        }
+
+        .card {
+            background: #1e293b;
+            border: none;
+            border-radius: 15px;
+        }
+
+        textarea {
+            height: 200px;
+            background: #0f172a;
+            color: white;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #334155;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <h2 class="text-center mb-4">🧠 EEG Classification System</h2>
+
+    <div class="card p-4">
+
+        <label>Enter EEG Signal (comma-separated or JSON array):</label>
+        <textarea id="signalInput" class="form-control"></textarea>
+
+        <button class="btn btn-primary mt-3" onclick="predict()">Predict</button>
+        <button class="btn btn-secondary mt-3" onclick="generateSample()">Generate Sample</button>
+
+        <div id="result" class="result-box mt-4" style="display:none;"></div>
+
+    </div>
+</div>
+
+<script>
+function generateSample() {
+    let arr = [];
+    for (let i = 0; i < 4094; i++) {
+        arr.push((Math.random() * 2 - 1).toFixed(4));
+    }
+    document.getElementById("signalInput").value = JSON.stringify(arr);
+}
+
+function predict() {
+    let input = document.getElementById("signalInput").value;
+
+    try {
+        let signal = JSON.parse(input);
+
+        fetch("/predict/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ signal: signal })
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            let html = `<h4>Prediction: ${data.predicted_class}</h4>`;
+            html += "<h5>Probabilities:</h5><ul>";
+
+            data.probabilities.forEach(p => {
+                html += `<li>Class ${p.class}: ${p.prob.toFixed(4)}</li>`;
+            });
+
+            html += "</ul>";
+
+            document.getElementById("result").style.display = "block";
+            document.getElementById("result").innerHTML = html;
+        });
+
+    } catch (err) {
+        alert("Invalid input format!");
+    }
+}
+</script>
+
+</body>
+</html>

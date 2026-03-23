@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import predict_eeg
+from .views import home, predict_api
 
 urlpatterns = [
-    path('predict/', predict_eeg),
+    path('', home, name='home'),
+    path('predict/', predict_api, name='predict'),
 ]

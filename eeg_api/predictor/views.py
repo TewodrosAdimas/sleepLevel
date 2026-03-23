@@ -1,45 +1,41 @@
+from django.shortcuts import render
 import numpy as np
 import joblib
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from django.http import JsonResponse
 
-# Load model once (global)
 model = joblib.load('predictor/model/svm_eeg_model.pkl')
 
 
-@api_view(['POST'])
-def predict_eeg(request):
-    try:
-        data = request.data.get("signal")
+def home(request):
+    return render(request, "predictor/index.html")
 
-        # ✅ Validation
-        if data is None:
-            return Response({"error": "No signal provided"}, status=400)
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+import numpy as np
 
-        if len(data) != 4094:
-            return Response({"error": "Signal must have 4094 values"}, status=400)
+@csrf_exempt
+def predict_api(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        signal = np.array(data["signal"]).reshape(1, -1)
 
-        signal = np.array(data).reshape(1, -1)
-
-        # Prediction
         pred = model.predict(signal)[0]
         probs = model.predict_proba(signal)[0]
+
         classes = model.classes_
 
-        # Sort descending
-        sorted_probs = sorted(
+        result = sorted(
             zip(classes, probs),
             key=lambda x: x[1],
             reverse=True
         )
 
-        return Response({
-            "predicted_class": int(pred),
+        return JsonResponse({
+            "prediction": int(pred),
             "probabilities": [
-                {"class": int(cls), "prob": float(p)}
-                for cls, p in sorted_probs
+                {"class": int(c), "prob": float(p)} for c, p in result
             ]
         })
 
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+    return JsonResponse({"error": "POST request required"})
