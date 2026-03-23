@@ -6,8 +6,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-        /* General Theme */
-        body { background: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         .container { margin-top: 50px; }
 
         .card {
@@ -18,25 +22,22 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
 
-        /* Result Section Styling */
-        .result-box { 
-            margin-top: 25px; 
+        .result-box {
+            margin-top: 25px;
             padding-top: 20px;
             border-top: 1px solid #334155;
         }
 
-        /* Specific Label Colors for Visibility */
-        .prediction-label { color: #38bdf8; font-weight: 600; } /* Sky Blue */
-        .confidence-label { color: #94a3b8; margin-top: 15px; font-weight: 500; } /* Slate Grey */
-        .class-text { color: #e2e8f0; font-size: 0.95rem; } /* Off-white */
-        .percent-text { color: #fbbf24; font-weight: bold; } /* Amber/Gold */
+        .prediction-label { color: #38bdf8; font-weight: 600; }
+        .confidence-label { color: #94a3b8; margin-top: 15px; font-weight: 500; }
+        .class-text { color: #e2e8f0; font-size: 0.95rem; }
+        .percent-text { color: #fbbf24; font-weight: bold; }
 
         .bar {
             height: 12px;
             background: #38bdf8;
             margin-bottom: 15px;
             border-radius: 10px;
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
         }
 
         textarea.form-control {
@@ -45,7 +46,7 @@
             border: 1px solid #334155;
             font-family: monospace;
         }
-        
+
         textarea.form-control:focus {
             background: #0f172a;
             color: #38bdf8;
@@ -63,20 +64,20 @@
     <h2 class="text-center mb-4">🧠 EEG Sleep Level Predictor</h2>
 
     <div class="card">
+
         <button class="btn btn-info mb-3" onclick="generateSample()">
             Generate Sample EEG
         </button>
 
         <textarea id="signal" class="form-control" rows="6"
-            placeholder="Paste 4094 EEG values here..."></textarea>
+            placeholder="Paste EEG values (space / comma / tab separated)"></textarea>
 
         <button class="btn btn-success mt-3 w-100 fw-bold" onclick="predict()">
             RUN PREDICTION
         </button>
 
-        <div class="result-box" id="result">
-            <!-- Results will appear here -->
-        </div>
+        <div class="result-box" id="result"></div>
+
     </div>
 </div>
 
@@ -84,30 +85,36 @@
 
 function generateSample() {
     let sample = [];
+
     for (let i = 0; i < 4094; i++) {
-        sample.push(parseFloat((Math.sin(i / 50) + (Math.random() * 0.1)).toFixed(4)));
+        // more random + realistic variation
+        sample.push((Math.random() * 2 - 1) * (Math.sin(i / 30) + Math.random()));
     }
-    document.getElementById("signal").value = JSON.stringify(sample);
+
+    document.getElementById("signal").value = sample.join(" ");
 }
 
 function predict() {
-    let signalInput = document.getElementById("signal").value;
+    let signalInput = document.getElementById("signal").value.trim();
 
     if (!signalInput) {
         alert("Please generate or paste EEG signal first!");
         return;
     }
 
-    let signal;
-    try {
-        signal = JSON.parse(signalInput);
-    } catch (e) {
-        alert("Invalid JSON format!");
+    // 🔥 SAFE PARSING (fixes ALL your previous errors)
+    let signal = signalInput
+        .split(/[\s,]+/)
+        .map(Number)
+        .filter(x => !isNaN(x));
+
+    if (signal.length === 0) {
+        alert("Invalid signal format!");
         return;
     }
 
     document.getElementById("result").innerHTML =
-        "<p class='text-center text-info'>Analyzing signal waves...</p>";
+        "<p class='text-info'>Analyzing EEG signal...</p>";
 
     fetch("/predict/", {
         method: "POST",
@@ -120,17 +127,15 @@ function predict() {
     .then(res => res.json())
     .then(data => {
 
-        if (!data || !data.probabilities) {
+        if (data.error) {
             document.getElementById("result").innerHTML =
-                `<span class="text-danger">Error: ${data.error || "Invalid response"}</span>`;
+                `<span class="text-danger">${data.error}</span>`;
             return;
         }
 
-        // Updated HTML with specific classes for visibility
         let html = `
             <h4 class="prediction-label">
-                Prediction: 
-                <span class="text-warning">${data.prediction}</span>
+                Prediction: <span class="text-warning">${data.prediction}</span>
             </h4>
             <h5 class="confidence-label">Confidence Breakdown:</h5>
         `;
@@ -140,7 +145,7 @@ function predict() {
 
             html += `
                 <div class="mb-1">
-                    <div class="d-flex justify-content-between mb-1">
+                    <div class="d-flex justify-content-between">
                         <span class="class-text">Class ${p.class}</span>
                         <span class="percent-text">${percent}%</span>
                     </div>
@@ -159,14 +164,14 @@ function predict() {
 
 function getCSRFToken() {
     let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        document.cookie.split(';').forEach(c => {
-            let cookie = c.trim();
-            if (cookie.startsWith('csrftoken=')) {
-                cookieValue = cookie.substring('csrftoken='.length);
-            }
-        });
-    }
+
+    document.cookie.split(';').forEach(c => {
+        let cookie = c.trim();
+        if (cookie.startsWith('csrftoken=')) {
+            cookieValue = cookie.substring('csrftoken='.length);
+        }
+    });
+
     return cookieValue;
 }
 
