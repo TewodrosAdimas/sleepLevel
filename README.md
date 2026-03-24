@@ -1,167 +1,202 @@
 
 ---
 
-# 🫀 Arrhythmia Detection using 1D-CNN
+# 🧠 EEG AI Predictor (Django + Machine Learning)
 
-## 📌 Project Overview
-
-This project implements a **1D Convolutional Neural Network (1D-CNN)** to detect **arrhythmia from ECG heart signals**.
-Given a raw ECG signal, the model classifies whether the patient has **arrhythmia (1)** or **normal heart rhythm (0)**.
+A web-based **EEG signal classification system** that predicts brain states such as eyes open/closed and epileptic activity using a trained ML model (SVM + Scaler) served via a Django API.
 
 ---
 
-## 📊 Dataset
+## 🚀 Features
 
-* Format: CSV file
-* Each row represents one ECG signal sample
-* Features: 1D time-series signal (length = 187)
-* Label:
+* 📡 Real-time EEG signal prediction
+* 🤖 Machine Learning model (SVM)
+* ⚖️ StandardScaler normalization (trained scaler.pkl)
+* 🧠 Multi-class classification:
 
-  * `0` → Normal
-  * `1` → Arrhythmia
+  * Eyes Open
+  * Eyes Closed
+  * Non-Epileptic Zone
+  * Epileptic Zone
+  * Seizure
+* 📊 Probability confidence visualization
+* 🎨 Modern dark UI dashboard
+* ⚡ Fast REST API with Django
 
 ---
 
-## 🧠 Model Architecture
+## 🧩 Tech Stack
 
-The model is built using **PyTorch** and consists of:
+### Backend
 
-* 3 × Conv1D layers (feature extraction)
-* ReLU activation functions
-* MaxPooling layers (downsampling)
-* Flatten layer
-* Fully connected layers (classification head)
+* Django
+* Django REST (manual JSON API)
+* NumPy
+* Scikit-learn
+* Joblib
 
-### Architecture Summary:
+### Frontend
+
+* HTML5
+* JavaScript (Vanilla)
+* Bootstrap 5
+* CSS3
+
+---
+
+## 🏗️ Project Structure
 
 ```
-Input: (batch, 1, 187)
-
-Conv1D → ReLU → MaxPool
-Conv1D → ReLU → MaxPool
-Conv1D → ReLU → MaxPool
-
-Flatten
-Linear (2688 → 64)
-ReLU
-Linear (64 → 1)
+project/
+│
+├── predictor/
+│   ├── model/
+│   │   ├── svm_eeg_model.pkl
+│   │   └── scaler.pkl
+│   │
+│   ├── views.py
+│   ├── urls.py
+│   └── templates/
+│       └── index.html
+│
+├── manage.py
+└── requirements.txt
 ```
 
 ---
 
 ## ⚙️ Installation
 
+### 1. Clone the project
+
 ```bash
-pip install torch torchvision pandas numpy scikit-learn tensorboard
+git clone https://github.com/your-username/eeg-ai-predictor.git
+cd eeg-ai-predictor
 ```
 
 ---
 
-## 🚀 Training the Model
+### 2. Create virtual environment
 
-```python
-python train.py
-```
-
-Training includes:
-
-* Binary Cross Entropy Loss with Logits
-* Adam Optimizer
-* TensorBoard logging
-* Model checkpoint saving (best & last model)
-
----
-
-## 🧪 Testing the Model
-
-```python
-python test.py
-```
-
-Evaluation metrics:
-
-* Accuracy
-* Loss
-
----
-
-## 📦 Data Preparation
-
-Input tensor shape must be:
-
-```
-(batch_size, 1, 187)
-```
-
-Labels:
-
-```
-(batch_size, 1)
+```bash
+python -m venv venv
+source venv/bin/activate   # mac/linux
+venv\Scripts\activate      # windows
 ```
 
 ---
 
-## 📈 Validation
+### 3. Install dependencies
 
-Validation is performed after each epoch to monitor performance and save the best model.
-
----
-
-## 💾 Model Saving
-
-Two models are saved:
-
-* `*_best.pth` → Best validation performance
-* `*_last.pth` → Last training epoch
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-## 🔍 Key Features
+### 4. Run migrations
 
-* 1D-CNN for time-series ECG analysis
-* GPU support (CUDA)
-* TensorBoard visualization
-* Modular PyTorch implementation
-* Binary classification (arrhythmia detection)
+```bash
+python manage.py migrate
+```
 
 ---
 
-## 🧠 Key Idea
+### 5. Start server
 
-The CNN automatically learns:
-
-* ECG spikes (QRS complex)
-* Rhythm patterns
-* Abnormal heart behavior
+```bash
+python manage.py runserver
+```
 
 ---
 
-## 📊 Results
+## 🌐 Usage
 
-(Add your results here)
-
-Example:
+1. Open browser:
 
 ```
-Test Accuracy: 92.4%
+http://127.0.0.1:8000/
 ```
+
+2. Paste EEG signal or generate sample
+3. Click **RUN PREDICTION**
+4. View:
+
+   * Predicted brain state
+   * Confidence scores
+
+---
+
+## 📡 API Endpoint
+
+### POST `/predict/`
+
+### Request
+
+```json
+{
+  "signal": [0.1, 0.2, 0.3, ...]
+}
+```
+
+### Response
+
+```json
+{
+  "prediction": 5,
+  "probabilities": [
+    {"class": 1, "prob": 0.05},
+    {"class": 2, "prob": 0.10},
+    {"class": 5, "prob": 0.80}
+  ]
+}
+```
+
+---
+
+## 🧠 Class Mapping
+
+| Class | Meaning            |
+| ----- | ------------------ |
+| 1     | Eyes Open          |
+| 2     | Eyes Closed        |
+| 3     | Non-Epileptic Zone |
+| 4     | Epileptic Zone     |
+| 5     | Seizure            |
+
+---
+
+## ⚠️ Notes
+
+* Input must match **4094 EEG features**
+* Model requires **same scaler used in training**
+* Synthetic generated data is only for testing UI
+* Real EEG data improves accuracy significantly
+
+---
+
+## 📈 Future Improvements
+
+* Live EEG streaming support
+* Seizure alert system (sound + popup)
+* Database logging of predictions
+* Patient dashboard
+* Graph visualization (EEG waveform)
+* Model retraining pipeline
 
 ---
 
 ## 👨‍💻 Author
 
-Tewodros Bewuket
-MSc Artificial Intelligence (Milano-Bicocca)
+Built by **Tewodros**
 
 ---
 
-## 📌 Future Improvements
+## 📜 License
 
-* Add Batch Normalization
-* Improve dataset balancing
-* Try LSTM / Transformer models
-* Hyperparameter tuning
-* Data augmentation for ECG signals
+This project is for educational and research purposes.
 
 ---
 
+
+Just tell me 👍
