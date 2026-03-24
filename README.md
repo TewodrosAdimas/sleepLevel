@@ -198,5 +198,3 @@ This project is for educational and research purposes.
 
 ---
 
-
-Just tell me 👍
