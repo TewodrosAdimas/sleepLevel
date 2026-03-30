@@ -70,7 +70,7 @@ project/
 ### 1. Clone the project
 
 ```bash
-git clone https://github.com/your-username/eeg-ai-predictor.git
+git clone https://github.com/TewodrosAdimas/eeg-ai-predictor.git
 cd eeg-ai-predictor
 ```
 
